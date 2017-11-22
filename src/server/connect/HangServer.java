@@ -59,64 +59,33 @@ public class HangServer {
         }
 
     }
-    //called from handler get the client and add the uppdated word to be sent to the client and set the keyoperation to write
-    public void addToOutBuffer(SelectionKey key ,String OutputString){
-        Client client = (Client) key.attachment();
-        client.addMsg(OutputString);
+    //called from handler get the handler after message has been added to the buffer to set the clients keyoperation to write
+    public void setKeyToWrite(SelectionKey key){
         key.interestOps(SelectionKey.OP_WRITE);
         selector.wakeup();
-
     }
     //get the message from client add the key so we now who to send the reply to
     //if IOeexcetion cancel the key
     private void takeinput(SelectionKey key) throws IOException{
-        Client client = (Client) key.attachment();
+        HangHandler handler = (HangHandler) key.attachment();
         try {
-            client.handler.getInput(key);
+            handler.getInput(key);
         }catch (IOException e){
             key.cancel();
         }
     }
-    //get the client and call send with the uppdated word. Set the key to read the next guess.
+    //get the handler and call send with the uppdated word. Set the key to read the next guess.
     private void send(SelectionKey key) throws IOException{
-        Client client = (Client) key.attachment();
-        client.send();
+        HangHandler handler = (HangHandler) key.attachment();
+        handler.send();
         key.interestOps(SelectionKey.OP_READ);
     }
-    //set up connection to client and add the client class as atachment.
+
+    //set up connection to client and add the handler class as atachment.
     public void handler(SelectionKey key)throws IOException{
         ServerSocketChannel servCh = (ServerSocketChannel) key.channel();
         SocketChannel clientCh = servCh.accept(); //set up the conection to the new client
         clientCh.configureBlocking(false);
-        clientCh.register(selector,SelectionKey.OP_WRITE,new Client(new HangHandler(this,clientCh))); //save the client which has handler as attachment to slector key
-    }
-
-    //class that keeps outbuffer for every client and the handler
-    private class Client{
-        private final Queue<ByteBuffer> output = new ArrayDeque<>();
-        private final HangHandler handler;
-        //Constructor for client adds welcome message to buffer to be sent.
-        private Client(HangHandler hangHandler){
-            handler = hangHandler;
-            String welcomeMSG = "Welcome press start to play hangman";
-            addMsg(welcomeMSG);
-        }
-        //adds message to buffer
-        private void addMsg(String msg){
-            ByteBuffer bytesMsg = ByteBuffer.wrap(msg.getBytes());
-            synchronized (output){
-                output.add(bytesMsg);
-            }
-        }
-        //sends the msg in the buffer.
-        private void send()throws IOException{
-            ByteBuffer msg;
-            synchronized (output){
-                while ((msg = output.peek()) != null){
-                    handler.send(msg);
-                    output.remove();
-                }
-            }
-        }
+        clientCh.register(selector,SelectionKey.OP_WRITE,new HangHandler(this,clientCh)); //save the client which has handler as attachment to slector key
     }
 }

@@ -14,6 +14,10 @@ import server.model.Gamestate;
 
 
 public class HangHandler extends Thread {
+    private final Queue<ByteBuffer> output = new ArrayDeque<>();
+
+
+
     private static Object[] words;
     private Random rand = new Random();
     private SocketChannel socketChannel;
@@ -36,7 +40,28 @@ public class HangHandler extends Thread {
         }
         this.socketChannel = socketChannel;
         this.server = server;
+
+        String welcomeMSG = "Welcome press start to play hangman";
+        addMsg(welcomeMSG);
     }
+
+    public void addMsg(String msg){
+        ByteBuffer bytesMsg = ByteBuffer.wrap(msg.getBytes());
+        synchronized (output){
+            output.add(bytesMsg);
+        }
+    }
+    public void send()throws IOException{
+        ByteBuffer msg;
+        synchronized (output){
+            while ((msg = output.peek()) != null){
+                //send(msg);
+                socketChannel.write(msg);
+                output.remove();
+            }
+        }
+    }
+
 
     @Override
     public void run(){
@@ -68,18 +93,12 @@ public class HangHandler extends Thread {
 
 
                 }
-                server.addToOutBuffer(key,gamestate.getOutputString(correct)); //add the outputstring to the buffer to be sent to the client attached to the key
+                addMsg(gamestate.getOutputString(correct));
+                server.setKeyToWrite(key); //add the outputstring to the buffer to be sent to the client and set the key to write
         }
     }
 
 
-
-
-
-    //write the message to the socketchannel
-    public void send(ByteBuffer msg)throws IOException{
-        socketChannel.write(msg); //sends message
-    }
     //read the buffer in the socketchannel and handle the message
     public void getInput(SelectionKey inputkey)throws IOException{
         key = inputkey;
