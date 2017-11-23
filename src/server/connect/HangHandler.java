@@ -57,7 +57,6 @@ public class HangHandler extends Thread {
         ByteBuffer msg;
         synchronized (output){
             while ((msg = output.peek()) != null){
-                //send(msg);
                 socketChannel.write(msg);
                 output.remove();
             }
