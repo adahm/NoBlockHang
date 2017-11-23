@@ -22,7 +22,7 @@ public class HangHandler extends Thread {
     private ByteBuffer msg = ByteBuffer.allocateDirect(5000); //buffer for input from client
     private Queue<String> messageQueue = new ArrayDeque<>(); //queue for messages from client
     private Gamestate gamestate ;
-    private SelectionKey key; //refrence for the key so we can add messages to the clients message queue.
+    private SelectionKey key; //refrence for the key so we can change it write when the message has been added to the buffer.
     private HangServer server;
 
 
