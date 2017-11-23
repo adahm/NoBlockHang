@@ -99,10 +99,12 @@ public class HangHandler extends Thread {
                 server.setKeyToWrite(key); //add the outputstring to the buffer to be sent to the client and set the key to write
         }
     }
+    public void setKey(SelectionKey key){
+        this.key = key;
+    }
 
     //read the buffer in the socketchannel and handle the message
-    public void getInput(SelectionKey inputkey)throws IOException{
-        key = inputkey;
+    public void getInput()throws IOException{
         msg.clear(); //set position to 0
         int bytesRead;
         bytesRead = socketChannel.read(msg);

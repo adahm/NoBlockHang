@@ -69,7 +69,7 @@ public class HangServer {
     private void takeinput(SelectionKey key) throws IOException{
         HangHandler handler = (HangHandler) key.attachment();
         try {
-            handler.getInput(key);
+            handler.getInput();
         }catch (IOException e){
             key.cancel();
         }
@@ -81,11 +81,13 @@ public class HangServer {
         key.interestOps(SelectionKey.OP_READ);
     }
 
-    //set up connection to client and add the handler class as atachment.
+    //set up connection to client and add the handler class as atachment to the registered selectionkey.
     public void handler(SelectionKey key)throws IOException{
         ServerSocketChannel servCh = (ServerSocketChannel) key.channel();
         SocketChannel clientCh = servCh.accept(); //set up the conection to the new client
         clientCh.configureBlocking(false);
-        clientCh.register(selector,SelectionKey.OP_WRITE,new HangHandler(this,clientCh)); //save the handler as attachment to key
+        HangHandler handler = new HangHandler(this,clientCh);
+        SelectionKey clientkey = clientCh.register(selector,SelectionKey.OP_WRITE,handler); //save the handler as attachment to key
+        handler.setKey(clientkey); //set the key in handler so we can change the operation to write after the return message has been added the the send buffer
     }
 }
