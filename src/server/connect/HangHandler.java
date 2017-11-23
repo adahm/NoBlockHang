@@ -14,24 +14,22 @@ import server.model.Gamestate;
 
 
 public class HangHandler extends Thread {
-    private final Queue<ByteBuffer> output = new ArrayDeque<>();
 
-
-
-    private static Object[] words;
+    private final Queue<ByteBuffer> output = new ArrayDeque<>(); //Buffer for messages to be sent to client
+    private static Object[] words; //array for hangman words
     private Random rand = new Random();
     private SocketChannel socketChannel;
-    private ByteBuffer msg = ByteBuffer.allocateDirect(5000);
-    private Queue<String> messageQueue = new ArrayDeque<>(); //que for message
+    private ByteBuffer msg = ByteBuffer.allocateDirect(5000); //buffer for input from client
+    private Queue<String> messageQueue = new ArrayDeque<>(); //queue for messages from client
     private Gamestate gamestate ;
     private SelectionKey key; //refrence for the key so we can add messages to the clients message queue.
     private HangServer server;
-    //Create array for the words from the supplied file.
 
-    //create an input and out stream.
+
     public HangHandler(HangServer server, SocketChannel socketChannel){
         gamestate = new Gamestate();   //create a new gamestate that keeps the state of the client.
 
+        //Create array for the words from the supplied file.
         try{
             BufferedReader readFile = new BufferedReader(new FileReader("/Users/Andreas/IdeaProjects/hang/src/words.txt"));
             words = readFile.lines().toArray();
@@ -41,16 +39,20 @@ public class HangHandler extends Thread {
         this.socketChannel = socketChannel;
         this.server = server;
 
+        //create welcome message and add it to the send buffer
         String welcomeMSG = "Welcome press start to play hangman";
         addMsg(welcomeMSG);
     }
 
-    public void addMsg(String msg){
+    //add message to the output buffer
+    private void addMsg(String msg){
         ByteBuffer bytesMsg = ByteBuffer.wrap(msg.getBytes());
         synchronized (output){
             output.add(bytesMsg);
         }
     }
+
+    //sends the messages in the buffer to the client
     public void send()throws IOException{
         ByteBuffer msg;
         synchronized (output){
@@ -97,7 +99,6 @@ public class HangHandler extends Thread {
                 server.setKeyToWrite(key); //add the outputstring to the buffer to be sent to the client and set the key to write
         }
     }
-
 
     //read the buffer in the socketchannel and handle the message
     public void getInput(SelectionKey inputkey)throws IOException{

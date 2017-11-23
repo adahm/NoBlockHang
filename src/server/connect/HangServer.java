@@ -59,7 +59,7 @@ public class HangServer {
         }
 
     }
-    //called from handler get the handler after message has been added to the buffer to set the clients keyoperation to write
+    //called from handler after message has been added to the buffer to set the keys keyoperation to write
     public void setKeyToWrite(SelectionKey key){
         key.interestOps(SelectionKey.OP_WRITE);
         selector.wakeup();
@@ -86,6 +86,6 @@ public class HangServer {
         ServerSocketChannel servCh = (ServerSocketChannel) key.channel();
         SocketChannel clientCh = servCh.accept(); //set up the conection to the new client
         clientCh.configureBlocking(false);
-        clientCh.register(selector,SelectionKey.OP_WRITE,new HangHandler(this,clientCh)); //save the client which has handler as attachment to slector key
+        clientCh.register(selector,SelectionKey.OP_WRITE,new HangHandler(this,clientCh)); //save the handler as attachment to key
     }
 }
